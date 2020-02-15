@@ -1,3 +1,4 @@
 # jumpshooter
 ECE470 robot simulation  
-The simulator this repository code can work on is Cappelia Robotics' simulator CoppeliaSim V4.0.0 rev4, education distribution. 
+The simulator this repository code can work on is Cappelia Robotics' simulator CoppeliaSim V4.0.0 rev4, education distribution. The simulator is compatable with Robot Operating System code.
+asdfihugasfuosadhc sanoiduchxznociuvh sadvfadsfsadfdf
