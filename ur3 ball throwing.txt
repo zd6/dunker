@@ -1,0 +1,64 @@
+
+function sysCall_threadmain()
+    jointHandles={-1,-1,-1,-1,-1,-1}
+    for i=1,6,1 do
+        jointHandles[i]=sim.getObjectHandle('UR3_joint'..i)
+    end
+
+    -- Set-up some of the RML vectors:
+    vel=6
+    accel=40
+    jerk=80
+    currentVel={0,0,0,0,0,0,0}
+    currentAccel={0,0,0,0,0,0,0}
+    maxVel={vel*math.pi/180,vel*math.pi/180,vel*math.pi/180,vel*math.pi/180,vel*math.pi/180,vel*math.pi/180}
+    maxAccel={accel*math.pi/180,accel*math.pi/180,accel*math.pi/180,accel*math.pi/180,accel*math.pi/180,accel*math.pi/180}
+    maxJerk={jerk*math.pi/180,jerk*math.pi/180,jerk*math.pi/180,jerk*math.pi/180,jerk*math.pi/180,jerk*math.pi/180}
+    targetVel={0,0,0,0,0,0}
+
+
+
+    targetPos1={0,0,0,0,0,0}
+    sim.rmlMoveToJointPositions(jointHandles,-1,currentVel,currentAccel,maxVel,maxAccel,maxJerk,targetPos1,targetVel)
+
+    
+    
+    targetPos2={0,math.pi/2,0,0,0,0}
+    sim.rmlMoveToJointPositions(jointHandles,-1,currentVel,currentAccel,maxVel,maxAccel,maxJerk,targetPos2,targetVel)
+    
+    
+    s=sim.getObjectHandle('suctionPadSensor')
+    suctionPadLink=sim.getObjectHandle('suctionPadLink')
+    result,force,torque=sim.readForceSensor(suctionPadLink)
+    index = 0
+    f = 0
+    while true do
+        shape=sim.getObjects(index,sim.object_shape_type)
+        if (shape==-1) then
+            break
+        end
+        if (sim.getObjectInt32Parameter(shape,sim.shapeintparam_respondable)~=0) and (sim.checkProximitySensor(s,shape)==1) then
+            
+            if (sim.getObjectName(shape)~="suctionPad") then
+                -- Ok, we found a respondable shape that was detected
+                -- We connect to that shape:
+                -- Make sure the two dummies are initially coincident:
+                f = 1
+                targetPos3={0,0,math.pi/2,math.pi/2,0,0}
+                sim.rmlMoveToJointPositions(jointHandles,-1,currentVel,currentAccel,maxVel,maxAccel,maxJerk,targetPos3,targetVel)
+                print("detected gripped object")
+                break
+            end
+                    
+        end
+        index=index+1
+    end
+    if (f==0) then
+        print("didn't detected gripped object")
+    end
+    targetPos4={0,0,0,0,0,0}
+    sim.rmlMoveToJointPositions(jointHandles,-1,currentVel,currentAccel,maxVel,maxAccel,maxJerk,targetPos4,targetVel)
+    print("returned")
+    --targetPos3={0,0,0,0,0,0}
+    --sim.rmlMoveToJointPositions(jointHandles,-1,currentVel,currentAccel,maxVel,maxAccel,maxJerk,targetPos3,targetVel)
+end
