@@ -10,3 +10,5 @@ Currently, we are at an early stage of testing what the simulator can do. We imp
 Also, we are testing about a locomotive that can move the robot arm around in the court. The mobile robot is called Pioneer, also a pre-build robot in CoppeliaSim.
 
 The forward kinematics is calculated in matlabFile/Jacobian.m and a demo code of controlling robot with api interface is in pyFile/v_rep_code.py
+
+The project got a recent update on the locomotive that can pick up a ball from a fixed passing hand. The 'player' then will place the ball into a basket.
