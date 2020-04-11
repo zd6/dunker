@@ -67,6 +67,29 @@ def GetSuctionPad():
 	#print('Getsuction',suck)
 	return suck
 
+def GetballGPS_x():
+	result, x = vrep.simxGetFloatSignal(
+		clientID, 'GPS_x', vrep.simx_opmode_blocking)
+	if result != vrep.simx_return_ok:
+		raise Exception('could not get gps x')
+	return x
+
+
+def GetballGPS_y():
+	result, y = vrep.simxGetFloatSignal(
+		clientID, 'GPS_y', vrep.simx_opmode_blocking)
+	if result != vrep.simx_return_ok:
+		raise Exception('could not get gps y')
+	return y
+
+
+def GetballGPS_z():
+	result, z = vrep.simxGetFloatSignal(
+		clientID, 'GPS_z', vrep.simx_opmode_blocking)
+	if result != vrep.simx_return_ok:
+		raise Exception('could not get gps z')
+	return z
+
 # Return skew matrix of a omega
 def omega(w):
 	return np.array([[0,-w[2],w[1]],[w[2],0,-w[0]],[-w[1],w[0],0]])
@@ -109,7 +132,7 @@ def CalcSuctionPosition():
 	# print('M: ', M)
 	for i in range(6):
 			T = expm(S[5-i]*theta[5-i])@T
-	print(T)
+	# print(T)
 	return T
 
 def Compare(T1, T2):
@@ -119,6 +142,23 @@ def Compare(T1, T2):
 			s+= (T1[i][j]-T2[i][j])*(T1[i][j]-T2[i][j])
 	print(s)
 	return s
+
+def Shoot():
+	vrep.simxSetJointTargetPosition(clientID, joint_three_handle, np.pi/8, vrep.simx_opmode_oneshot)
+	
+	time.sleep(0.2)
+	vrep.simxSetJointTargetPosition(clientID, joint_four_handle, np.pi/8, vrep.simx_opmode_oneshot)
+	vrep.simxSetJointTargetPosition(clientID, joint_three_handle, -np.pi/8, vrep.simx_opmode_oneshot)
+	vrep.simxSetJointTargetPosition(clientID, joint_two_handle, -np.pi*2/3, vrep.simx_opmode_oneshot)
+	time.sleep(0.14)
+	vrep.simxSetIntegerSignal(
+		clientID, 'suc_ON', 0, vrep.simx_opmode_oneshot)
+	
+	#vrep.simxSetJointTargetPosition(clientID, joint_two_handle, -np.pi/2, vrep.simx_opmode_oneshot)
+	
+	
+	time.sleep(1)
+	vrep.simxSetJointTargetPosition(clientID, joint_two_handle, 0, vrep.simx_opmode_blocking)
 
 
 # Function that reads suction pad position and orientation
@@ -137,6 +177,13 @@ def GetSuctionPosition():
 	M = np.vstack((np.hstack((R, p.transpose())), [0, 0, 0, 1]))
 	print(M)
 	return M
+
+# Function that reads suction pad position relative to world
+def GetSuctionAbsPosition():
+	result, position = vrep.simxGetObjectPosition(clientID, suction, -1, vrep.simx_opmode_blocking)
+	if result != vrep.simx_return_ok:
+		raise Exception('could not get suction position')
+	return position
 
 # Turn off the suction pad
 def SetSuctionPadOff():
@@ -173,6 +220,28 @@ def GetJointAngle():
 	theta = np.array([[theta1],[theta2],[theta3],[theta4],[theta5],[theta6]])
 	#print(theta)
 	return theta
+
+def move_base(l):
+	vrep.simxSetJointTargetVelocity(
+		clientID, wheel1, l[0]*3.34934966643019, vrep.simx_opmode_blocking)
+	vrep.simxSetJointTargetVelocity(
+		clientID, wheel2, l[1]*3.34934966643019, vrep.simx_opmode_blocking)
+	vrep.simxSetJointTargetVelocity(
+		clientID, wheel3, l[2]*3.34934966643019, vrep.simx_opmode_blocking)
+	vrep.simxSetJointTargetVelocity(
+		clientID, wheel4, l[3]*3.34934966643019, vrep.simx_opmode_blocking)
+
+def dir_base(dir):
+	if dir == 1:
+		move_base([1, 1, -1, -1]) 
+	elif dir == 2:
+		move_base([-1, -1, 1, 1])
+	elif dir == 3:
+		move_base([1, -1, -1, 1])
+	elif dir == 4:
+		move_base([-1, 1, 1, -1])
+	else:
+		move_base([0, 0, 0, 0])
 
 
 
@@ -223,12 +292,31 @@ if result != vrep.simx_return_ok:
 result, end_handle = vrep.simxGetObjectHandle(clientID, 'UR3_link7_visible', vrep.simx_opmode_blocking)
 if result != vrep.simx_return_ok:
 	raise Exception('could not get object handle for end effector')
-result, suction = vrep.simxGetObjectHandle(clientID, 'suctionPad', vrep.simx_opmode_blocking)
+result, suction = vrep.simxGetObjectHandle(clientID, 'suctionPad#0', vrep.simx_opmode_blocking)
 if result != vrep.simx_return_ok:
 	raise Exception('could not get object handle for suction pad')
-result, car = vrep.simxGetObjectHandle(clientID, 'Pioneer_p3dx', vrep.simx_opmode_blocking)
+result, suction2 = vrep.simxGetObjectHandle(clientID, 'suctionPad', vrep.simx_opmode_blocking)
+if result != vrep.simx_return_ok:
+	raise Exception('could not get object handle for suction pad2')
+result, car = vrep.simxGetObjectHandle(clientID, 'OmniPlatform', vrep.simx_opmode_blocking)
 if result != vrep.simx_return_ok:
 	raise Exception('could not get object handle for car')
+result, wheel1 = vrep.simxGetObjectHandle(
+	clientID, 'OmniWheel_regularRotation', vrep.simx_opmode_blocking)
+if result != vrep.simx_return_ok:
+	raise Exception('could not get object handle for whelel')
+result, wheel2 = vrep.simxGetObjectHandle(
+	clientID, 'OmniWheel_regularRotation#0', vrep.simx_opmode_blocking)
+if result != vrep.simx_return_ok:
+	raise Exception('could not get object handle for whelel')
+result, wheel3 = vrep.simxGetObjectHandle(
+	clientID, 'OmniWheel_regularRotation#1', vrep.simx_opmode_blocking)
+if result != vrep.simx_return_ok:
+	raise Exception('could not get object handle for whelel')
+result, wheel4 = vrep.simxGetObjectHandle(
+	clientID, 'OmniWheel_regularRotation#2', vrep.simx_opmode_blocking)
+if result != vrep.simx_return_ok:
+	raise Exception('could not get object handle for whelel')
 
 # ==================================================================================================== #
 
@@ -266,33 +354,87 @@ print('start moving')
 # 							[0,0,0,0,0,-0.5*np.pi], \
 # 							[0.5*np.pi,0,-0.5*np.pi,0.5*np.pi,0.5*np.pi,-0.5*np.pi],\
 # 							[-0.5*np.pi,-0.5*np.pi,-0.5*np.pi,0,-0.5*np.pi,-0.5*np.pi]])
-Goal_joint_angles = np.array([[-0.5*np.pi,0,0,0,0,0], \
-							[0,-0.5*np.pi,0,0,0,0], \
-							[0,0,-0.5*np.pi,0,0,0], \
-							[0,0,0,0.5*np.pi,0,0], \
-							[0,0,0,0,0.5*np.pi,0], \
-							[0,0,0,0,0,-0.5*np.pi]])
-#while GetSuctionPad() == 0:
-#	time.sleep(0.5)
-for i in range(6):
-	print('cycle', i)
-	#GetJointAngle()
-	
-	SetJointPosition(Goal_joint_angles[i])
-	T1 = GetSuctionPosition()
-	T2 = CalcSuctionPosition()
-	Compare(T1,T2)
-	SetSuctionPadOff()
+#Goal_joint_angles = np.array([[-0.5*np.pi,0,0,0,0,0], \
+#							[0,-0.5*np.pi,0,0,0,0], \
+#							[0,0,-0.5*np.pi,0,0,0], \
+#							[0,0,0,0.5*np.pi,0,0], \
+#							[0,0,0,0,0.5*np.pi,0], \
+#							[0,0,0,0,0,-0.5*np.pi]])
+
+
+
+#GetJointAngle()
+## get absolute position of the ball
+ball_pos = [GetballGPS_x(), GetballGPS_y(), GetballGPS_z()]
+print(ball_pos)
+## move the mobile dir_base(direction) direction: 1= +x, 2= -x, 3= +y, 4= -y 
+dir_base(3)
+time.sleep(3)
+dir_base(1)
+
+
+SetJointPosition(np.array([0,0,0,0.5*np.pi,0,0]))
+while GetSuctionPad() == 0:
+	time.sleep(0.5)	
+time.sleep(0.5)
+T1 = GetSuctionPosition()
+T2 = CalcSuctionPosition()
 
 # Wait two seconds
 time.sleep(1)
 
-SetJointPosition(np.array([0,0,0,0,0,0]))
+SetJointPosition(np.array([0,0,0,0,-0.5*np.pi,0]))
 time.sleep(1)
 GetSuctionPosition()
 CalcSuctionPosition()
+ball_pos = [GetballGPS_x(), GetballGPS_y(), GetballGPS_z()]
 
+
+result,j2pos=vrep.simxGetObjectPosition(clientID, joint_two_handle,-1,vrep.simx_opmode_blocking)
+z = ball_pos[2]-j2pos[2]-0.083
+
+t2 = np.arccos((z*z+0.244*0.244-0.213*0.213)/(2*z*0.244))
+t3 = np.arccos((-z**2+0.244**2+0.213**2)/(2*0.213*0.244))
+t4 = np.arccos((z**2-0.244**2+0.213**2)/(2*z*0.213))
+print([t2,t3,t4])
+SetJointPosition(np.array([0,-t2,np.pi-t3,-t4,-0.5*np.pi,0]))
+suc_pos = GetSuctionAbsPosition()
+while np.abs(ball_pos[1]-suc_pos[1]-0.130)>0.005 and np.abs(ball_pos[0]-suc_pos[0])>0.005:
+	ball_pos = [GetballGPS_x(), GetballGPS_y(), GetballGPS_z()]
+	suc_pos = GetSuctionAbsPosition()
+
+	
+
+	#print(ball_pos[0]-suc_pos[0])
+	if(ball_pos[0]-suc_pos[0] > 0.01):
+		dir_base(2)
+		continue
+	if(ball_pos[0]-suc_pos[0] <-0.01):
+		dir_base(1)
+		continue
+	if(ball_pos[1]-suc_pos[1] > 0.130):
+		dir_base(3)
+		continue
+	if(ball_pos[1]-suc_pos[1] <0.129):
+		dir_base(4)
+		continue
+	dir_base(0)
+	
+	time.sleep(0.1)
 time.sleep(1)
+vrep.simxSetIntegerSignal(
+		clientID, 'suc_ON2', 0, vrep.simx_opmode_blocking)
+time.sleep(0.5)
+SetJointPosition(np.array([np.pi,-t2,np.pi-t3,-t4,-0.5*np.pi,0]))
+dir_base(4)
+time.sleep(4.8)
+dir_base(0)
+SetJointPosition(np.array([np.pi,t2,np.pi-t3,-t4,-0.5*np.pi,0]))
+vrep.simxSetIntegerSignal(
+		clientID, 'suc_ON', 0, vrep.simx_opmode_blocking)
+time.sleep(0.5)
+time.sleep(10)
+
 # **************************************************************************************************** #
 
 # Stop simulation
