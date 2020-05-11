@@ -1,4 +1,4 @@
-# jumpshooter
+# Dunker
 ECE470 robot simulation group project
 
 Jian Chen, Zhengguan Dai, Zhehong Wang
