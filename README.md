@@ -3,12 +3,5 @@ ECE470 robot simulation group project
 
 Jian Chen, Zhengguan Dai, Zhehong Wang
 
-The simulator this repository code can work on is Cappelia Robotics' simulator CoppeliaSim V4.0.0 rev4, education distribution. The simulator is compatible with Robot Operating System code.
+The project is trying to mock the dunking motion in basketball using a combination of robot car and robot arm. It uses inverse kinematics to calculate the joint angle so it can pick up the ball or place the ball into the basket. It also uses GPS data to orient and position the robot car to the correct position, force-sensor to detect if it successfully picked up the ball. The results show it can successfully find both the ball and the basket in almost all placements. In the project, we gained insight on the Coppelia simulator. The robot is still crude now, as we used lots of features that’s unrealistic like the GPS. In the future, we might use more realistic sensors like infrared or supersonic distance sensors to find the ball and the basket, and use path planning in a field with potential obstacles, or we can let the robot throw the ball inside of dunking to increase the difficulties.
 
-Currently, we are at an early stage of testing what the simulator can do. We implemented a small snippet of 'lua' code that check if the ball has been gripped in 'hand'. If the ball is in 'hand', we track a curve that simulate a shooting the basketball, while return to initial position if not detecting a ball in firm grip.
-
-Also, we are testing about a locomotive that can move the robot arm around in the court. The mobile robot is called Pioneer, also a pre-build robot in CoppeliaSim.
-
-The forward kinematics is calculated in matlabFile/Jacobian.m and a demo code of controlling robot with api interface is in pyFile/v_rep_code.py
-
-The project got a recent update on the locomotive that can pick up a ball from a fixed passing hand. The 'player' then will place the ball into a basket.
